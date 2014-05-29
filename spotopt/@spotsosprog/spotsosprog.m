@@ -424,33 +424,38 @@ classdef spotsosprog < spotprog
         
         % Reduce an expression x by substituting 1 - s^2 for c^2 (and
         % higher powers)
-        % s and c may be vectors, where this is performed elementwise
+        % s and c may be vectors, where this is performed elementwise   
         function x = trigExprReduction(pr,x,s,c)
-          for i=1:length(s),
-            [~,cid] = isfree(c(i));
-            [~,sid] = isfree(s(i));
-            [ii,jj] = find(x.var == cid);
-            %           cind = find(x.var == cid);
-            pow = x.pow;
-            vars = x.var;
-            sub = x.sub;
-            coeff = x.coeff;
-            cind_array = ii+(jj-1)*size(pow,1);
-            ind = find(pow(cind_array) >= 2);
-            N = length(ind);
-            while N > 0,
-              pow(cind_array(ind)) = pow(cind_array(ind)) - 2;
-              pow = [pow zeros(size(pow,1),1); pow(ii(ind),:) 2*ones(N,1)];
-              vars = [vars zeros(size(vars,1),1); vars(ii(ind),:) sid*ones(N,1)];
-              sub = [sub;ones(N,2)];
-              coeff = [coeff;-coeff(ii(ind))];
-              
-              [ii,jj] = find(vars == cid);
-              cind_array = ii+(jj-1)*size(pow,1);
-              ind = find(pow(cind_array) >= 2);
-              N = length(ind);
+          for row=1:size(x,1),
+            for col=1:size(x,2),
+              for i=1:length(s),
+                xij = x(row,col);  
+                [~,cid] = isfree(c(i));
+                [~,sid] = isfree(s(i));
+                [ii,jj] = find(xij.var == cid);
+                %           cind = find(x.var == cid);
+                pow = xij.pow;
+                vars = xij.var;
+                sub = xij.sub;
+                coeff = xij.coeff;
+                cind_array = ii+(jj-1)*size(pow,1);
+                ind = find(pow(cind_array) >= 2);
+                N = length(ind);
+                while N > 0,
+                  pow(cind_array(ind)) = pow(cind_array(ind)) - 2;
+                  pow = [pow zeros(size(pow,1),1); pow(ii(ind),:) 2*ones(N,1)];
+                  vars = [vars zeros(size(vars,1),1); vars(ii(ind),:) sid*ones(N,1)];
+                  sub = [sub;ones(N,2)];
+                  coeff = [coeff;-coeff(ii(ind))];
+                  
+                  [ii,jj] = find(vars == cid);
+                  cind_array = ii+(jj-1)*size(pow,1);
+                  ind = find(pow(cind_array) >= 2);
+                  N = length(ind);
+                end
+                x(row,col) = msspoly([1 1],sub,vars,pow,coeff);
+              end
             end
-            x = msspoly([1 1],sub,vars,pow,coeff);
           end
         end
         
