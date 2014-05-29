@@ -95,8 +95,16 @@ classdef spotsosprog < spotprog
             % Build the Gram basis
             phi = spotsosprog.buildGramBasis(expr,decvar,options); 
             
+            if isfield(options,'trig') && options.trig.enable
+              phi = pr.trigBasisReduction(phi,options.trig.sin,options.trig.cos);
+            end
+            
             [pr,Q] = newGram(pr,length(phi));
             sosCnst = expr-phi'*Q*phi;
+            
+            if isfield(options,'trig') && options.trig.enable
+              sosCnst = pr.trigExprReduction(sosCnst,options.trig.sin,options.trig.cos);
+            end
             
             decvar = pr.variables;
             
@@ -376,6 +384,77 @@ classdef spotsosprog < spotprog
         end
         
         
+        
+        % reduce basis vector x by substitituing 1 - s^2 for c^2 (and 
+        % higher powers) into each element of x. Eliminates duplicate elements
+        % and returns the new basis vector.
+        % s and c may be vectors, where this is performed elementwise
+        function x = trigBasisReduction(pr,x,s,c)
+          [vars,exp,coeff]=decomp(x);
+                    
+          [~,xid] = isfree(vars);
+          [~,cid] = isfree(c);
+          [~,sid] = isfree(s);
+          
+          smtch = mss_match(xid,sid);
+          vars     = [ vars ; s(smtch == 0) ];
+          
+          [~,xid] = isfree(vars);
+          
+          exp   = [exp zeros(size(exp,1), sum(smtch == 0))];
+          smtch = mss_match(xid,sid);
+          
+          mtch = mss_match(xid,cid);  
+          for i = 1:length(mtch)
+            if mtch(i) ~= 0
+              ind = find(exp(:,mtch(i)) >= 2,1);
+              while ~isempty(ind)
+                exp(ind,mtch(i)) = exp(ind,mtch(i)) - 2;
+                c0 = exp(ind,:);
+                exp(ind,smtch(i)) = exp(ind,smtch(i)) + 2;
+                exp = unique([exp; c0],'rows');
+
+                ind = find(exp(:,mtch(i)) >= 2,1);
+              end
+            end
+          end
+          
+          x=recomp(vars,exp,eye(size(exp,1)));
+        end
+        
+        % Reduce an expression x by substituting 1 - s^2 for c^2 (and
+        % higher powers)
+        % s and c may be vectors, where this is performed elementwise
+        function x = trigExprReduction(pr,x,s,c)
+          for i=1:length(s),
+            [~,cid] = isfree(c(i));
+            [~,sid] = isfree(s(i));
+            [ii,jj] = find(x.var == cid);
+            %           cind = find(x.var == cid);
+            pow = x.pow;
+            vars = x.var;
+            sub = x.sub;
+            coeff = x.coeff;
+            cind_array = ii+(jj-1)*size(pow,1);
+            ind = find(pow(cind_array) >= 2);
+            N = length(ind);
+            while N > 0,
+              pow(cind_array(ind)) = pow(cind_array(ind)) - 2;
+              pow = [pow zeros(size(pow,1),1); pow(ii(ind),:) 2*ones(N,1)];
+              vars = [vars zeros(size(vars,1),1); vars(ii(ind),:) sid*ones(N,1)];
+              sub = [sub;ones(N,2)];
+              coeff = [coeff;-coeff(ii(ind))];
+              
+              [ii,jj] = find(vars == cid);
+              cind_array = ii+(jj-1)*size(pow,1);
+              ind = find(pow(cind_array) >= 2);
+              N = length(ind);
+            end
+            x = msspoly([1 1],sub,vars,pow,coeff);
+          end
+        end
+        
+        
         function n = numSOS(pr)
             n = length(pr.sosExpr);
         end
@@ -388,7 +467,7 @@ classdef spotsosprog < spotprog
             n = length(pr.sdsosExpr);
         end
 
-	function n = numDiagSOS(pr)
+        function n = numDiagSOS(pr)
             n = length(pr.diagsosExpr);
         end
         
@@ -479,7 +558,8 @@ classdef spotsosprog < spotprog
                 
                 sol = minimize@spotprog(pr,varargin{:});
             end
-        end        
+        end
+        
     end
     
     methods (Access = private, Static)
