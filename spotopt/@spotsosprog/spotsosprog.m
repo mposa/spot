@@ -235,6 +235,32 @@ classdef spotsosprog < spotprog
             pr = pr.withPSD(Q);
             basis = recomp(var,pow,speye(size(pow,1)));
         end
+        
+        % Construct a new SOS (or DSOS/SDOS) polynomial, given a monomial
+        % basis. Unlike typical approach, this constructs the polynomial
+        % from the Gram matrix and basis, rather than constructing a
+        % polynomial and later constraining it to be equal to phi'*Q*phi
+        % @param pr
+        % @param monomials the monomial basis of the polynomial
+        % @param newGram a function handle to construct a new gram matrix.
+        % @param options
+        function [pr,expr,newDecVars] = newSOSPolyCompressed(pr, monomials, newGram,options)
+          decvar = pr.variables;
+          phi = spotsosprog.buildGramBasis(sum(monomials),decvar,options);
+          
+          if isfield(options,'trig') && options.trig.enable
+            phi = pr.trigMonomReduction(phi,options.trig.sin,options.trig.cos);
+          end
+          
+          [pr,Q] = newGram(pr,length(phi));
+          
+          newDecVars = Q(:);
+          expr = phi'*Q*phi;
+          
+          if isfield(options,'trig') && options.trig.enable
+            expr = pr.trigExprReduction(expr,options.trig.sin,options.trig.cos);
+          end
+        end
     end
     
     methods (Access = private)
