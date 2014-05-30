@@ -249,7 +249,7 @@ classdef spotsosprog < spotprog
           phi = spotsosprog.buildGramBasis(sum(monomials),decvar,options);
           
           if isfield(options,'trig') && options.trig.enable
-            phi = pr.trigMonomReduction(phi,options.trig.sin,options.trig.cos);
+            phi = pr.trigBasisReduction(phi,options.trig.sin,options.trig.cos);
           end
           
           [pr,Q] = newGram(pr,length(phi));

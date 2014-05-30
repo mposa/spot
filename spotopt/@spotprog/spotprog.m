@@ -799,7 +799,7 @@ classdef spotprog
                       end
                       rr_iter = rr_iter + 1;
                       if rem(rr_iter,100) == 0
-                        display(sprintf('Iter %d, resid=%e, cost=%e, time=%f',iter,resid, c'*xk, toc));
+                        display(sprintf('rr_iter=%d, k=%d of %d rows. Original size %d rows.',rr_iter,k,size(Ac,1),init_size));
                         Ac\bc;
                         if isempty(lastwarn)
                           break;
@@ -810,7 +810,7 @@ classdef spotprog
                     end
                   end
                   warning on
-                  display(sprintf('Iter %d, resid=%e, cost=%e, time=%f',iter,resid, c'*xk, toc));
+                  display(sprintf('Row reduction of A in %f seconds. Eliminated %d of %d rows.',toc,-size(Ac,1)+init_size,init_size));
 
                   Winv = speye(length(x));
                   Winv(Isym,Isym) = sqrt(2)/2*Winv(Isym,Isym);
@@ -825,7 +825,7 @@ classdef spotprog
                   last_resid = norm(A*x-b);
                   resid = last_resid;
                   iter=0;
-                  max_iter = 100;
+                  max_iter = 30;
                   display(sprintf('Iter %d, resid=%e, time=%f',iter,resid,0));
                   tic
                   if 0
@@ -845,7 +845,7 @@ classdef spotprog
                     resid = norm(A*x-b);
                     iter = iter+1;
                     if rem(iter,10) == 0,
-                      display(sprintf('Iter %d, resid=%e, time=%f',iter,resid,toc));
+                      display(sprintf('Iter %d, resid=%e, cost=%e time=%f',iter,resid,toc));
                     end
                   end
                   else
@@ -853,7 +853,7 @@ classdef spotprog
                     xbar = x0;
                     xtild = x0;
                     
-                    while iter <= 1 || (iter < max_iter && resid/last_resid < .9999)
+                    while iter <= 1 || (iter < max_iter && resid/last_resid < .999)
                       xk = 2/(iter+2)*xbar + iter/(iter+2)*xtild;
                       last_resid = resid;
                       bopt = [zeros(size(Ac,2),1); bc - Ac*T*xk];
@@ -893,7 +893,7 @@ classdef spotprog
                       resid = norm(A*xk-b);
                       iter = iter+1;
                       if rem(iter,10) == 0,
-                        display(sprintf('Iter %d, resid=%e, time=%f',iter,resid,toc));
+                        display(sprintf('Iter %d, resid=%e, cost=%e, time=%f',iter,resid, c'*xk, toc));
                       end
                     end
                     if resid > last_resid
@@ -902,7 +902,8 @@ classdef spotprog
                     x = xk;
                   end
                   resid = norm(A*x-b);
-                  display(sprintf('Iter %d, resid=%e, time=%f',iter,resid,toc));
+                  display(sprintf('Iter %d, resid=%e, cost=%e, time=%f',iter,resid, c'*xk, toc));
+%                   keyboard
                 end
 
                 if ~isempty(x)
