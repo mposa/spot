@@ -731,6 +731,13 @@ classdef spotprog
                 pr = prog.primalize();
                 nf = pr.numFree;
                 [P,A,b,c,K,d] = pr.toSedumi(pobj, options);
+                
+                if isfield(options,'do_fr') && options.do_fr,
+                  prg = frlibPrg(A,b,c,K);
+                  prgR = prg.ReducePrimal('d');
+                  prgR.PrintStats;
+                  [A,b,c,K] = GetMosek(prgR);
+                end
 
                 % Enable basic facial reduction.
                 % save Abck_1sdsos_30.mat A b c K options P pr pobj 

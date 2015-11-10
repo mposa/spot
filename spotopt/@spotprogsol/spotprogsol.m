@@ -23,12 +23,12 @@ classdef spotprogsol
     methods (Static)
         function feas = statusIsPrimalFeasible(status)
             feas = (status == spotsolstatus.STATUS_PRIMAL_AND_DUAL_FEASIBLE ...
-                    | status == spotsolstatus.STATUS_DUAL_INFEASIBLE);
+                    | status == spotsolstatus.STATUS_DUAL_INFEASIBLE | status == spotsolstatus.STATUS_NUMERICAL_PROBLEMS);
         end
 
         function feas = statusIsDualFeasible(status)
             feas = (status == spotsolstatus.STATUS_PRIMAL_AND_DUAL_FEASIBLE ...
-                    | status == spotsolstatus.STATUS_PRIMAL_INFEASIBLE);
+                    | status == spotsolstatus.STATUS_PRIMAL_INFEASIBLE | status == spotsolstatus.STATUS_NUMERICAL_PROBLEMS);
         end
     end
 
@@ -76,7 +76,12 @@ classdef spotprogsol
                 e = sol.solDualEval(expr);
             else, 
                 e = sol.solPrimalEval(expr);
-           end
+            end
+           
+            [dbl,err] = double(e);
+            if ~err
+              e = dbl;
+            end
         end
 
         function e = dualEval(sol,expr)

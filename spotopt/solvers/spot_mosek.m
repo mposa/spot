@@ -100,9 +100,9 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
     
     start = spot_now();
     if options.verbose
-        [r,res] = mosekopt(cmd,prob);
+        [r,res] = mosekopt(cmd,prob,param);
     else
-        [info.console,r,res] = evalc('mosekopt(cmd, prob);');
+        [info.console,r,res] = evalc('mosekopt(cmd, prob, param);');
     end
     [info.ctime,info.wtime] = spot_etime(spot_now(),start);
 
@@ -123,7 +123,7 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
         end
     end
 
-    if spotprogsol.statusIsPrimalFeasible(status)
+    if spotprogsol.statusIsPrimalFeasible(status) || true
         x = res.sol.itr.xx;
         if ~isempty(K.s)
             barx = zeros(ns,1);
@@ -163,7 +163,7 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
         x = NaN*ones(n,1);
     end
     
-    if spotprogsol.statusIsDualFeasible(status)
+    if spotprogsol.statusIsDualFeasible(status) || true
         y = res.sol.itr.y;
         z = c-A'*y;
     else
