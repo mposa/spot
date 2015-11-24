@@ -734,14 +734,24 @@ classdef spotprog
                 
                 if isfield(options,'do_fr') && options.do_fr,
                   prg = frlibPrg(A,b,c,K);
-                  prgR = prg.ReducePrimal('d');
+
+%                   prgR = prg.ReducePrimal('d');
+                  
+                  prgR0 = blkdiagPrg(prg);
+                  prgR0.PrintStats;
+                  prgR = prgR0.ReducePrimal('d');                  
                   prgR.PrintStats;
-                  [A,b,c,K] = GetMosek(prgR);
+                  [A,b,c,K] = prgR.toMosek();
+                  [x,y,z,info] = solver(A,b,c,K,options);                  
+%                   [x] = prgR.RecoverPrimal(x);
+%                   [z] = prgR.RecoverPrimal(z);
+                  [x] = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
+                  [z] = prgR0.RecoverPrimal(prgR.RecoverPrimal(z));
+                else
+                   [x,y,z,info] = solver(A,b,c,K,options); 
                 end
 
-                % Enable basic facial reduction.
-                % save Abck_1sdsos_30.mat A b c K options P pr pobj 
-                [x,y,z,info] = solver(A,b,c,K,options);
+                
                 
                 if isfield(options,'clean_primal') && options.clean_primal,
                  %todo:check info here 
