@@ -1,4 +1,29 @@
 function [x,y,z,info] = spot_mosek(A,b,c,K,options)
+
+
+    if ~isfield(K,'f') 
+        K.f = 0;
+    end
+
+    if ~isfield(K,'l') 
+        K.l = 0;
+    end
+
+    if ~isfield(K,'q') || all(K.q == 0)
+        K.q = [];
+    end
+
+    if ~isfield(K,'s') || all(K.s == 0)
+       K.s = [];
+    else
+       K.s = K.s(K.s ~= 0); 
+    end
+
+    if ~isfield(K,'r') || all(K.r == 0)
+        K.r = [];
+    end
+
+
     if nargin < 5, options = spot_sdp_default_options(); end
     
     
@@ -16,6 +41,12 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
     prob.a = A(:,1:nn);
     prob.blc = full(b');
     prob.buc = full(b');
+    
+    if nr > 0
+        prob.cones.type = [];
+        prob.cones.subptr = [];
+        prob.cones.sub = [];
+    end
 
     if ~isempty(K.q)
         prob.cones.type = repmat(res.symbcon.MSK_CT_QUAD,1,length(K.q));
@@ -24,7 +55,7 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
     end
     if ~isempty(K.r)
         prob.cones.type = [ prob.cones.type repmat(res.symbcon.MSK_CT_RQUAD,1,length(K.r))];
-        prob.cones.subptr = [ prob.cones.subptr nq+[0 cumsum(K.r(1:end-1))] ];
+        prob.cones.subptr = [ prob.cones.subptr 1+nq+[0 cumsum(K.r(1:end-1))] ];
         prob.cones.sub    = [ prob.cones.sub nf+nl+nq+(1:nr) ];
     end
     
@@ -58,7 +89,7 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
         barc = c(nn+1:end);
         bara = A(:,nn+1:end);
         
-        [jj,~,val] = find(barc);
+        [jj,~,val] = find(barc(:));
         [j,k,l] = jklOf(K.s,jj');
         
         val(k ~= l) = val(k ~= l)/2;
@@ -107,7 +138,8 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
     [info.ctime,info.wtime] = spot_etime(spot_now(),start);
 
     if ~isfield(res, 'sol')
-        status = spotsoltype.STATUS_SOLVER_ERROR;
+        warning('Spotless:SpotMosek:MosekError', 'Mosek produced the following error message: "%s" (%s)', res.rmsg, res.rcodestr);
+        status = spotsolstatus.STATUS_SOLVER_ERROR;
     else
         switch res.sol.itr.prosta
           case 'PRIMAL_AND_DUAL_FEASIBLE',
@@ -160,19 +192,21 @@ function [x,y,z,info] = spot_mosek(A,b,c,K,options)
 
         end
     else
-        x = NaN*ones(n,1);
+        x = []; % NaN*ones(n,1);
     end
     
     if spotprogsol.statusIsDualFeasible(status) || true
         y = res.sol.itr.y;
-        z = c-A'*y;
+        z = c(:)-A'*y;
     else
-        y = NaN*ones();
-        z = NaN*ones();
+        y = []; % NaN*ones();
+        z = []; % NaN*ones();
     end
     
     info.solverName = 'mosek';
-    info.solverInfo = res.sol;
+    if status ~= spotsolstatus.STATUS_SOLVER_ERROR
+        info.solverInfo = res.sol;
+    end
     info.status = status;
 
 end
