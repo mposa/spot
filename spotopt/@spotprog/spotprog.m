@@ -733,20 +733,30 @@ classdef spotprog
                 [P,A,b,c,K,d] = pr.toSedumi(pobj, options);
                 
                 if isfield(options,'do_fr') && options.do_fr,
-                  prg = frlibPrg(A,b,c,K);
-
-%                   prgR = prg.ReducePrimal('d');
                   
-                  prgR0 = blkdiagPrg(prg);
-                  prgR0.PrintStats;
-                  prgR = prgR0.ReducePrimal('d');                  
-                  prgR.PrintStats;
-                  [A,b,c,K] = prgR.toMosek();
-                  [x,y,z,info] = solver(A,b,c,K,options);                  
+                  if false
+                    % block diagonalization and facial reduction
+                    prg = frlibPrg(A,b,c,K);                
+                    prgR0 = blkdiagPrg(prg);
+                    prgR0.PrintStats;                 
+                    prgR = prgR0.ReducePrimal('d');
+                    prgR.PrintStats;
+                    [A,b,c,K] = prgR.toMosek();
+                    [x,y,z,info] = solver(A,b,c,K,options);
 %                   [x] = prgR.RecoverPrimal(x);
 %                   [z] = prgR.RecoverPrimal(z);
-                  [x] = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
-                  [z] = prgR0.RecoverPrimal(prgR.RecoverPrimal(z));
+                    [x] = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
+                    [z] = prgR0.RecoverPrimal(prgR.RecoverPrimal(z));
+                  else
+                    % just do block diagonalization
+                    prg = frlibPrg(A,b,c,K);
+                    prgR = blkdiagPrg(prg);
+                    prgR.PrintStats;
+                    [A,b,c,K] = prgR.toMosek();
+                    [x,y,z,info] = solver(A,b,c,K,options);
+                    [x] = prgR.RecoverPrimal(x);
+                    [z] = prgR.RecoverPrimal(z);
+                  end
                 else
                    [x,y,z,info] = solver(A,b,c,K,options); 
                 end
