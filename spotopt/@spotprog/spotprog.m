@@ -734,12 +734,15 @@ classdef spotprog
                 
                 if isfield(options,'do_fr') && options.do_fr,
                   
-                  if false
+                  variant = 1;
+                  
+                  if variant == 1
                     % block diagonalization and facial reduction
                     prg = frlibPrg(A,b,c,K);                
                     prgR0 = blkdiagPrg(prg);
-                    prgR0.PrintStats;                 
-                    prgR = prgR0.ReducePrimal('d');
+                    prgR0.PrintStats;
+                    opts.useQR = true;
+                    prgR = prgR0.ReducePrimal('d',opts);
                     prgR.PrintStats;
                     [A,b,c,K] = prgR.toMosek();
                     [x,y,z,info] = solver(A,b,c,K,options);
@@ -747,10 +750,20 @@ classdef spotprog
 %                   [z] = prgR.RecoverPrimal(z);
                     [x] = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
                     [z] = prgR0.RecoverPrimal(prgR.RecoverPrimal(z));
-                  else
+                  elseif variant == 2
                     % just do block diagonalization
                     prg = frlibPrg(A,b,c,K);
                     prgR = blkdiagPrg(prg);
+                    prgR.PrintStats;
+                    [A,b,c,K] = prgR.toMosek();
+                    [x,y,z,info] = solver(A,b,c,K,options);
+                    [x] = prgR.RecoverPrimal(x);
+                    [z] = prgR.RecoverPrimal(z);
+                  else
+                    % just facial reduction
+                    prg = frlibPrg(A,b,c,K);
+                    opts.useQR = true;
+                    prgR = prg.ReducePrimal('d',opts);
                     prgR.PrintStats;
                     [A,b,c,K] = prgR.toMosek();
                     [x,y,z,info] = solver(A,b,c,K,options);
