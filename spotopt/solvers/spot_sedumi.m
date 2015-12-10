@@ -9,7 +9,7 @@ function [x,y,z,info] = spot_sedumi(A,b,c,K,options)
         sedumi_options = struct('errors',0);
     end    
     if ~isfield(sedumi_options,'fid')
-        sedumi_options.fid = options.verbose;
+        sedumi_options.fid = double(options.verbose);
     end
     
     start = spot_now();

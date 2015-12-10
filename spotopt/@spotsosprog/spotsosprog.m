@@ -525,7 +525,7 @@ classdef spotsosprog < spotprog
         % sol = minimize(pr,pobj,solver,options)
         %
             if nargin >= 1
-                if ~ pr.isRealPolyLinearInDec(varargin{1})
+                if ~isequal(varargin{1},0) && ~any(pr.isRealPolyLinearInDec(varargin{1}))
                    error('Objective function must be linear in decision variables') 
                 end
             end
