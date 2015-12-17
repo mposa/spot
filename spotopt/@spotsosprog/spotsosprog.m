@@ -7,10 +7,12 @@ classdef spotsosprog < spotprog
         sosTrigExpr = {};
         dsosExpr = {};
         sdsosExpr = {};
-	diagsosExpr = {};
+        diagsosExpr = {};
         indeterminates = msspoly([]);
         gramMatrices = {};
         gramMonomials = {};
+        sosEqsDualVars = {};
+        sosEqsBasis = {};
     end
 
     methods (Access = private)
@@ -334,9 +336,8 @@ classdef spotsosprog < spotprog
                        'non-trigonometric, and expression must ' ...
                       'be linear in decision variables.']);
             end
-            tokens = length(pr.sosExpr) + (1:prod(size(expr)));
+            conInd = pr.numSOS + (1:numel(expr));
             pr.sosExpr = [ pr.sosExpr ; expr(:) ];
-            conInd = pr.numSOS;
         end
         
         function [pr,conInd] = withDSOS(pr,expr)
@@ -345,9 +346,8 @@ classdef spotsosprog < spotprog
                        'non-trigonometric, and expression must ' ...
                       'be linear in decision variables.']);
             end
-            tokens = length(pr.dsosExpr) + (1:prod(size(expr)));
+            conInd = pr.numDSOS + (1:numel(expr));
             pr.dsosExpr = [ pr.dsosExpr ; expr(:) ];
-            conInd = pr.numSOS + pr.numDSOS;
         end
         
         function [pr,conInd] = withSDSOS(pr,expr)
@@ -356,9 +356,8 @@ classdef spotsosprog < spotprog
                        'non-trigonometric, and expression must ' ...
                       'be linear in decision variables.']);
             end
-            tokens = length(pr.sdsosExpr) + (1:prod(size(expr)));
+            conInd = pr.numSDSOS + (1:numel(expr));
             pr.sdsosExpr = [ pr.sdsosExpr ; expr(:) ];
-            conInd = pr.numSOS + pr.numDSOS + pr.numSDSOS;
         end
 
         function [pr,conInd] = withDiagSOS(pr,expr)
@@ -367,9 +366,8 @@ classdef spotsosprog < spotprog
                        'non-trigonometric, and expression must ' ...
                       'be linear in decision variables.']);
             end
-            tokens = length(pr.diagsosExpr) + (1:prod(size(expr)));
+            conInd = pr.numDiagSOS + (1:numel(expr));
             pr.diagsosExpr = [ pr.diagsosExpr ; expr(:) ];
-            conInd = pr.numSOS + pr.numDSOS + pr.numSDSOS + pr.numDiagSOS;
         end
         
         function [pr] = withSOSMatrix(pr,expr)
@@ -566,6 +564,8 @@ classdef spotsosprog < spotprog
                     [pr,Q{i},phi{i},y{i},basis{i},eqMultFac] = pr.buildSOSDecompPrimal(pr.sosExpr(i),@newPSD,options);
                     pr.gramMatrices{i} = eqMultFac*Q{i};
                     pr.gramMonomials{i} = phi{i};
+                    pr.sosEqsDualVars{i} = y{i};
+                    pr.sosEqsBasis{i} = basis{i};
                 end
                 for i = 1:pr.numDSOS
                     ioff = i + dsosOff;
@@ -575,23 +575,33 @@ classdef spotsosprog < spotprog
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.dsosExpr(i),@newDD,options);
                     pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
+                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numSDSOS
                     ioff = i + sdsosOff;
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.sdsosExpr(i),@newSDD,options);
-                    pr.gramMatrices{ioff} = eqMultFac*Q{ioff};
+                    pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
+                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numDiagSOS
                     ioff = i + diagsosOff;
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.diagsosExpr(i),@newDiag,options);
-                    pr.gramMatrices{ioff} = eqMultFac*Q{ioff};
+                    pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
+                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numTrigSOS
                     ioff = i + trigOff;
                     t = pr.sosTrigExpr{i};
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff}] = pr.buildSOSTrigDecomp(t{:});
+                    pr.gramMatrices{ioff} = eqMultFac*Q{ioff};
+                    pr.gramMonomials{ioff} = phi{ioff};
+                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 
                 sol = minimize@spotprog(pr,varargin{:});
