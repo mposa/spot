@@ -738,7 +738,7 @@ classdef spotprog
                   
                   if variant == 1
                     % block diagonalization and facial reduction
-                    prg = frlibPrg(A,b,c,K);                
+                    prg = frlibPrg(A,b,c,K);                  
                     prgR0 = blkdiagPrg(prg);
                     prgR0.PrintStats;
                     opts.useQR = true;
@@ -748,8 +748,9 @@ classdef spotprog
                     [x,y,z,info] = solver(A,b,c,K,options);
 %                   [x] = prgR.RecoverPrimal(x);
 %                   [z] = prgR.RecoverPrimal(z);
-                    [x] = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
-                    [z] = prgR0.RecoverPrimal(prgR.RecoverPrimal(z));
+                    x = prgR0.RecoverPrimal(prgR.RecoverPrimal(x));
+                    z = 0*prgR0.RecoverPrimal(prgR.RecoverPrimal(z)); %result is bad
+                    y = prgR0.RecoverDual(prgR.RecoverDual(y));
                   elseif variant == 2
                     % just do block diagonalization
                     prg = frlibPrg(A,b,c,K);
@@ -758,7 +759,8 @@ classdef spotprog
                     [A,b,c,K] = prgR.toMosek();
                     [x,y,z,info] = solver(A,b,c,K,options);
                     [x] = prgR.RecoverPrimal(x);
-                    [z] = prgR.RecoverPrimal(z);
+                    [z] = 0*prgR.RecoverPrimal(z); %result is bad
+                    [y] = prgR.RecoverPrimal(y);
                   else
                     % just facial reduction
                     prg = frlibPrg(A,b,c,K);
@@ -768,7 +770,8 @@ classdef spotprog
                     [A,b,c,K] = prgR.toMosek();
                     [x,y,z,info] = solver(A,b,c,K,options);
                     [x] = prgR.RecoverPrimal(x);
-                    [z] = prgR.RecoverPrimal(z);
+                    [z] = prgR.RecoverPrimal(z); %result is bad
+                    [y] = prgR.RecoverDual(y);
                   end
                 else
                    [x,y,z,info] = solver(A,b,c,K,options); 
