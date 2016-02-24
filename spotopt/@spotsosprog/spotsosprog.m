@@ -89,8 +89,8 @@ classdef spotsosprog < spotprog
                 y = [];
                 basis = [];
             else
-                expr = expr/max(abs(Coeff(:)));
-                eqMultFac = max(abs(Coeff(:)));
+%                 expr = expr/max(abs(Coeff(:)));
+%                 eqMultFac = max(abs(Coeff(:)));
             end
             
             
@@ -575,7 +575,7 @@ classdef spotsosprog < spotprog
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.dsosExpr(i),@newDD,options);
                     pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
-                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsDualVars{ioff} = y{ioff};
                     pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numSDSOS
@@ -583,7 +583,7 @@ classdef spotsosprog < spotprog
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.sdsosExpr(i),@newSDD,options);
                     pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
-                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsDualVars{ioff} = y{ioff};
                     pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numDiagSOS
@@ -591,7 +591,7 @@ classdef spotsosprog < spotprog
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff},eqMultFac] = pr.buildSOSDecompPrimal(pr.diagsosExpr(i),@newDiag,options);
                     pr.gramMatrices{ioff} = eqMultFac*Q{ioff}; 
                     pr.gramMonomials{ioff} = phi{ioff};
-                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsDualVars{ioff} = y{ioff};
                     pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 for i = 1:pr.numTrigSOS
@@ -600,7 +600,7 @@ classdef spotsosprog < spotprog
                     [pr,Q{ioff},phi{ioff},y{ioff},basis{ioff}] = pr.buildSOSTrigDecomp(t{:});
                     pr.gramMatrices{ioff} = eqMultFac*Q{ioff};
                     pr.gramMonomials{ioff} = phi{ioff};
-                    pr.sosEqsDualVars{i} = y{ioff};
+                    pr.sosEqsDualVars{ioff} = y{ioff};
                     pr.sosEqsBasis{ioff} = basis{ioff};
                 end
                 
