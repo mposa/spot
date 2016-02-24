@@ -734,7 +734,7 @@ classdef spotprog
                 
                 if isfield(options,'do_fr') && options.do_fr,
                   
-                  variant = 1;
+                  variant = 2;
                   
                   if variant == 1
                     % block diagonalization and facial reduction
@@ -760,7 +760,7 @@ classdef spotprog
                     [x,y,z,info] = solver(A,b,c,K,options);
                     [x] = prgR.RecoverPrimal(x);
                     [z] = 0*prgR.RecoverPrimal(z); %result is bad
-                    [y] = prgR.RecoverPrimal(y);
+                    [y] = prgR.RecoverDual(y);
                   else
                     % just facial reduction
                     prg = frlibPrg(A,b,c,K);
