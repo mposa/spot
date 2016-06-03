@@ -734,7 +734,7 @@ classdef spotprog
                 
                 if isfield(options,'do_fr') && options.do_fr,
                   
-                  variant = 2;
+                  variant = 1;
                   
                   if variant == 1
                     % block diagonalization and facial reduction

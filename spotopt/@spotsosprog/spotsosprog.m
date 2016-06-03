@@ -71,7 +71,8 @@ classdef spotsosprog < spotprog
     
     methods (Access = public)
         function [pr,Q,phi,y,basis,eqMultFac] = buildSOSDecompPrimal(pr,expr,newGram,options)
-            if ~spot_hasSize(expr,[1 1])
+
+          if ~spot_hasSize(expr,[1 1])
                 error('buildSOSDecomp expects a scalar polynomial.');
             end
             decvar = pr.variables;
@@ -89,8 +90,8 @@ classdef spotsosprog < spotprog
                 y = [];
                 basis = [];
             else
-%                 expr = expr/max(abs(Coeff(:)));
-%                 eqMultFac = max(abs(Coeff(:)));
+                expr = expr/max(abs(Coeff(:)));
+                eqMultFac = max(abs(Coeff(:)));
             end
             
             
@@ -102,6 +103,9 @@ classdef spotsosprog < spotprog
             end
             
             [pr,Q] = newGram(pr,length(phi));
+            if isfield(options,'sos_slack')
+              Q = Q - options.sos_slack*eye(length(phi));
+            end
             sosCnst = expr-phi'*Q*phi;
             
             if isfield(options,'trig') && options.trig.enable
